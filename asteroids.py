@@ -1,6 +1,7 @@
 import pygame
 import time
 import random
+import math
 
 pygame.init()
 
@@ -30,31 +31,42 @@ class Asteroid:
         self.x += self.velocity_x
         if(self.y - 100 > display_height):
             self.__init__(self.id)
-    def intersects(self,x,y):
-        o_player = (x+30),(y+30)
-        if abs(self.x-o_player[0])<self.radius and abs(self.y-o_player[1])<self.radius:
+    def intersects(self,rect):
+        if abs(self.x-rect.centerx)<self.radius and abs(self.y-rect.centery)<self.radius:
             return True
         return False
 
 class Player:
     def __init__(self):
-        self.x = display_width/2
-        self.y = display_height/2
+        self.original_img = rocket
+        self.img = rocket
+        self.rect = self.img.get_rect(topleft=(display_width/2,display_height/2))
+        self.velocity = 0
         self.velocity_x = 0
         self.velocity_y = 0
+        self.rotation = 0
+        self.angle = 0
     def move(self):
-        self.x += self.velocity_x
-        self.y += self.velocity_y
-        if self.x < -60:
-            self.x = display_width
-        elif self.x > display_width:
-            self.x = -60
-        if self.y < 0:
-            self.y = 0
-        elif self.y > display_height-60:
-            self.y = display_height-60
+        self.velocity_x = self.velocity * math.sin(math.radians(self.angle))
+        self.velocity_y = self.velocity * math.cos(math.radians(self.angle))
+        self.rect=self.rect.move(self.velocity_x,self.velocity_y)
+        self.rotate()
+        if self.rect.x < -60:
+            self.rect.x = display_width
+        elif self.rect.x > display_width:
+            self.rect.x = -60
+        if self.rect.y < 0:
+            self.rect.y = 0
+        elif self.rect.y > display_height-60:
+            self.rect.y = display_height-60
+        
+    def rotate(self):
+        self.angle += self.rotation
+        self.img = pygame.transform.rotate(self.original_img,self.angle)
+        self.rect = self.img.get_rect(center=self.rect.center)
+
     def display(self):
-        screen.blit(rocket,(self.x,self.y))
+        screen.blit(self.img,self.rect)
 
 
 def msg(fontsize,text,x,y):
@@ -92,19 +104,19 @@ def game_loop():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
-                    player.velocity_x = -4
+                    player.rotation = 4
                 if event.key == pygame.K_d:
-                    player.velocity_x = 4
+                    player.rotation = -4
                 if event.key == pygame.K_w:
-                    player.velocity_y = -4
+                    player.velocity = -5
                 if event.key == pygame.K_s:
-                    player.velocity_y = 4
+                    player.velocity = 5
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a or event.key == pygame.K_d:
-                    player.velocity_x = 0
+                    player.rotation = 0
                 if event.key == pygame.K_w or event.key == pygame.K_s:
-                    player.velocity_y = 0
+                    player.velocity = 0
 
         timer+=1
         if timer%100==0:
@@ -123,7 +135,7 @@ def game_loop():
         for a in asteroids:
             a.move()
             a.display()
-            if(a.intersects(player.x,player.y)):
+            if(a.intersects(player.rect)):
                 game_over(level)
                 game_exit=True
                 game_restart=True
