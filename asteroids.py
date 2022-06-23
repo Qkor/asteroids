@@ -36,6 +36,27 @@ class Asteroid:
             return True
         return False
 
+class Player:
+    def __init__(self):
+        self.x = display_width/2
+        self.y = display_height/2
+        self.velocity_x = 0
+        self.velocity_y = 0
+    def move(self):
+        self.x += self.velocity_x
+        self.y += self.velocity_y
+        if self.x < -60:
+            self.x = display_width
+        elif self.x > display_width:
+            self.x = -60
+        if self.y < 0:
+            self.y = 0
+        elif self.y > display_height-60:
+            self.y = display_height-60
+    def display(self):
+        screen.blit(rocket,(self.x,self.y))
+
+
 def msg(fontsize,text,x,y):
     font = pygame.font.Font('freesansbold.ttf',fontsize)
     textSurf= font.render(text,True,white) 
@@ -52,17 +73,10 @@ def game_over(level):
 def points(level):
     msg(40,"Score: " + str(level),700,40)
 
-def player(x,y):
-    screen.blit(rocket,(x,y))
-
 def game_loop():
 
-    x = display_width*0.5
-    y = display_height*0.5
-    x_change = 0
-    y_change = 0
-
     level = 0
+    player = Player()
     asteroids = []
     id=0
     timer=0
@@ -78,30 +92,19 @@ def game_loop():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
-                    x_change = -4
+                    player.velocity_x = -4
                 if event.key == pygame.K_d:
-                    x_change = 4
+                    player.velocity_x = 4
                 if event.key == pygame.K_w:
-                    y_change = -4
+                    player.velocity_y = -4
                 if event.key == pygame.K_s:
-                    y_change = 4
+                    player.velocity_y = 4
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_a or event.key == pygame.K_d:
-                    x_change = 0
+                    player.velocity_x = 0
                 if event.key == pygame.K_w or event.key == pygame.K_s:
-                    y_change = 0
-
-
-        
-        if x < -60:
-            x = display_width
-        elif x > display_width:
-            x = -60
-        if y < 0:
-            y = 0
-        elif y > display_height-60:
-            y = display_height-60
+                    player.velocity_y = 0
 
         timer+=1
         if timer%100==0:
@@ -113,14 +116,14 @@ def game_loop():
             asteroids.append(a)
 
         screen.fill(black)
-        x+=x_change
-        y+=y_change
-        player(x,y)
+
+        player.move()
+        player.display()
 
         for a in asteroids:
             a.move()
             a.display()
-            if(a.intersects(x,y)):
+            if(a.intersects(player.x,player.y)):
                 game_over(level)
                 game_exit=True
                 game_restart=True
