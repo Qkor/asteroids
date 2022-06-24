@@ -92,17 +92,18 @@ def msg(fontsize,text,x,y):
     screen.blit(textSurf,textRect)
     pygame.display.update()
 
-def game_over(level):
+def game_over(score):
     msg(60,"Game over",display_width/2,display_height/2)
-    msg(40,"Score: " + str(level),display_width/2,display_height/2 + 60)
+    msg(40,"Score: " + str(score),display_width/2,display_height/2 + 60)
     time.sleep(2)
 
-def points(level):
-    msg(40,"Score: " + str(level),700,40)
+def points(score):
+    msg(40,"Score: " + str(score),675,40)
 
 def game_loop():
 
     level = 0
+    asteroids_destroyed = 0
     player = Player()
     asteroids = []
     bullets = []
@@ -162,8 +163,11 @@ def game_loop():
             b.display()
             l = len(asteroids)
             asteroids[:] = [a for a in asteroids if not a.intersects(b)]
-            if len(asteroids)==l and not b.out():
-                bullets_left.append(b)
+            if len(asteroids)==l:
+                if not b.out():
+                    bullets_left.append(b)
+            else:
+                asteroids_destroyed  += 1
         bullets = bullets_left
 
 
@@ -171,10 +175,10 @@ def game_loop():
             a.move()
             a.display()
             if(a.intersects(player)):
-                game_over(level)
+                game_over(level+asteroids_destroyed)
                 game_exit=True
                 game_restart=True
-        points(level)
+        points(level + asteroids_destroyed)
         pygame.display.update()
         clock.tick(60)
 
