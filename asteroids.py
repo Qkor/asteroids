@@ -30,6 +30,10 @@ class Object:
         if (self.rect.x-obj.rect.centerx)**2 + (self.rect.y-obj.rect.centery)**2 < self.radius**2:
             return True
         return False
+    def out(self):
+        if self.rect.x < -100 or self.rect.x > display_width or self.rect.y < -100 or self.rect.y > display_height:
+            return True
+        return False
 
 class Asteroid(Object):
     def __init__(self):
@@ -102,6 +106,7 @@ def game_loop():
     player = Player()
     asteroids = []
     bullets = []
+    bullets_left=[]
     id=0
     timer=0
     game_exit = False
@@ -123,7 +128,7 @@ def game_loop():
                     player.velocity = -5
                 if event.key == pygame.K_s:
                     player.velocity = 3
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and len(bullets)<5:
                     new_bullet = Bullet(player)
                     bullets.append(new_bullet)
 
@@ -136,21 +141,31 @@ def game_loop():
 
         timer+=1
         if timer%100==0:
-            if level < 40:
-                level += 1
-        if timer%(41 - level)==0:
+            level += 1
+        if level < 40:
+            if timer%(41 - level)==0:
+                a = Asteroid()
+                asteroids.append(a)
+        elif len(asteroids) < 300:
             a = Asteroid()
-            id+=1
             asteroids.append(a)
+
 
         screen.fill(black)
 
         player.move()
         player.display()
 
+        bullets_left = []
         for b in bullets:
             b.move()
             b.display()
+            l = len(asteroids)
+            asteroids[:] = [a for a in asteroids if not a.intersects(b)]
+            if len(asteroids)==l and not b.out():
+                bullets_left.append(b)
+        bullets = bullets_left
+
 
         for a in asteroids:
             a.move()
